@@ -154,6 +154,6 @@ for(cat in unique_categories){
 }
 
 # XLSX speichern
-category_file <- file.path(output_folder, "KEGG_category_matrix_significant.xlsx")
+category_file <- file.path(output_folder, "KEGG_category_matrix_significant_SA6850_2024.xlsx")
 write.xlsx(category_matrix, category_file)
 message("KEGG-Kategorie-Zählmatrix für signifikante Proteine gespeichert unter: ", category_file)

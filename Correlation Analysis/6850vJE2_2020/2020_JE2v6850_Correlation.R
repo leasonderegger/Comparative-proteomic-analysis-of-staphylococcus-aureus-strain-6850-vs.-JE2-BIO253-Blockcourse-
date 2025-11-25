@@ -1,10 +1,6 @@
-#JE2 v 6850 Correlation Plot
+#JE2 v 6850 Correlation 2020
 #clear workspace
 rm(list=ls())
-#rm(Prx)
-#rm(SAstrainSpecificIDs_to_Uniprot_onlyJE2)
-#rm(ProtJE2)
-
 
 #load libraries
 library(readr)
@@ -15,17 +11,27 @@ library(stringr)
 library(writexl)
 
 #import datasets
-X6850_2020_data <- read_excel("~/BIO253 Correlation 6850 v JE2/6850_2020_data.xlsx",
-                              skip = 1)
-JE2_2020_data <- read_excel("~/BIO253 Correlation 6850 v JE2/JE2_2020_data.xlsx",
-                            skip = 2)
-SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel("~/BIO253 Correlation 6850 v JE2/SAstrainSpecificIDs_to_Uniprot (2).xlsx",
-                                                sheet = "Sheet1", skip = 6)
-SAstrainSpecificIDs_to_Uniprot_onlyJE2 <- read_excel("~/BIO253 Correlation 6850 v JE2/SAstrainSpecificIDs_to_Uniprot_onlyJE2.xlsx",
-                                                     sheet = "Sheet1", skip = 6)
+# Define input directory
+input_dir <- file.path("Correlation Analysis", "Input")
 
-#load data & extract Locus as its own column
-Prx_6850 <- X6850_2020_data
+X6850_2020_data <- read_excel(
+  file.path(input_dir, "6850_2020_data.xlsx"),
+  skip = 1)
+
+JE2_2020_data <- read_excel(
+  file.path(input_dir, "JE2_2020_data.xlsx"),
+  skip = 2)
+
+SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel(
+  file.path(input_dir, "SAstrainSpecificIDs_to_Uniprot.xlsx"),
+  sheet = "Sheet1",
+  skip = 6)
+
+SAstrainSpecificIDs_to_Uniprot_onlyJE2 <- read_excel(
+  file.path(input_dir, "SAstrainSpecificIDs_to_Uniprot_onlyJE2.xlsx"),
+  sheet = "Sheet1",
+  skip = 6)
+
 
 #Extract Locus & Diff 6850 into a new dataframe
 Prx <- data.frame(
@@ -61,9 +67,6 @@ Prx_complete <- Prx[complete.cases(Prx[, c("ID_6850",
                                            "uniprot_ID",
                                            "ID_JE2",
                                           "diff_JE2")]), ]
-
-#safe in excel file
-#write_xlsx(Prx_complete, path = "C:/Users/Lea Sonderegger/Documents/Prx_complete_2020.xlsx")
 
 #Delete duplicate dataframes
 rm(SAstrainSpecificIDs_to_Uniprot_2_)
@@ -109,14 +112,11 @@ ggplot(Prx_significant, aes(x=diff_6850, y=diff_JE2))+
         size = 2)+
     geom_smooth(method = "lm", se = TRUE, color = "white")
 
-#code can be run as one
-
 #make a linear model
 
 Prx_mod <- lm(diff_6850 ~ diff_JE2, data=Prx_significant)
 #autoplot(Prx_mod)
 summary(Prx_mod)
-anova(Prx_mod)
 
 #perform correlation test
 cor.test(Prx_significant$diff_6850, Prx_significant$diff_JE2,
@@ -143,9 +143,8 @@ down_in_both     <- subset(Prx_significant, group == "Down in both")
 
 
 ##save to folder
-### ---- Save outputs to folder (2020 analysis) ----
 
-out_dir <- "C:/Users/Lea Sonderegger/Documents/BIO253 Correlation Output/6850vJE2_2020"
+out_dir <- file.path("Correlation Analysis", "Output", "6850vJE2_2020")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset
@@ -175,7 +174,7 @@ write_xlsx(
     path = file.path(out_dir, "Prx_down_in_both_6850vJE2_2020.xlsx")
 )
 
-# Save plot (last print)
+# Save plot 
 ggsave(
     filename = file.path(out_dir, "Correlation_6850vJE2_2020.png"),
     width = 15,

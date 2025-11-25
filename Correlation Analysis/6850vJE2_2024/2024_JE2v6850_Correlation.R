@@ -1,4 +1,4 @@
-#JE2 v 6850 Correlation Plot
+#JE2 v 6850 2024 Correlation 
 #clear workspace
 rm(list=ls())
 
@@ -13,16 +13,26 @@ library(ggfortify)
 library(readxl)
 
 #loaddataset
-DE_WUDEA_PASNvsTSB1 <- read_excel("~/BIO253 Correlation 6850 v JE2/DE_WUDEA_PASNvsTSB1.xlsx",
-                                  sheet = "diff_exp_analysis")
-JE2_TSBvPASN_data <- read_excel("~/BIO253 Correlation 6850 v JE2/JE2_TSBvPASN_data.xlsx")
-SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel("~/BIO253 Correlation 6850 v JE2/SAstrainSpecificIDs_to_Uniprot (2).xlsx",
-                                                sheet = "Sheet1", skip = 6)
-SAstrainSpecificIDs_to_Uniprot_onlyJE2 <- read_excel("~/BIO253 Correlation 6850 v JE2/SAstrainSpecificIDs_to_Uniprot_onlyJE2.xlsx",
-                                                     sheet = "Sheet1", skip = 6)
+input_dir <- file.path("Correlation Analysis", "Input")
+Prx_6850 <- read_excel(
+  file.path(input_dir, "6850_2024_data.xlsx"),
+  sheet = "diff_exp_analysis")
 
-#load data & extract Locus as its own column
-Prx_6850 <- DE_WUDEA_PASNvsTSB1
+Prx_JE2 <- read_excel(
+  file.path(input_dir, "JE2_2024_data.xlsx"))
+
+SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel(
+  file.path(input_dir, "SAstrainSpecificIDs_to_Uniprot.xlsx"),
+  sheet = "Sheet1",
+  skip = 6)
+
+SAstrainSpecificIDs_to_Uniprot_onlyJE2 <- read_excel(
+  file.path(input_dir, "SAstrainSpecificIDs_to_Uniprot_onlyJE2.xlsx"),
+  sheet = "Sheet1",
+  skip = 6)
+
+
+#Extract Locus as its own column
 Prx_6850 <- Prx_6850 %>%
     mutate(locus_tag = str_extract(description, "(?<=\\[locus_tag=)[^\\]]+"))
 
@@ -52,7 +62,6 @@ Prx <- left_join(
     by = "uniprot_ID")
 
 #get JE2 data
-Prx_JE2 <- JE2_TSBvPASN_data
 Prx_JE2 <- Prx_JE2 %>%
     mutate(locus_tag = str_extract(description, "(?<=\\[locus_tag=)[^\\]]+"))
 Prx <- Prx %>%
@@ -67,24 +76,18 @@ Prx_complete <- Prx[complete.cases(Prx[, c("ID_6850",
                                            "ID_JE2",
                                            "diff_JE2")]), ]
 
-#safe in excel file
-#write_xlsx(Prx_complete, path = "C:/Users/Lea Sonderegger/Documents/Prx_complete_2024.xlsx")
 
 #Delete duplicate dataframes
 rm(SAstrainSpecificIDs_to_Uniprot_2_)
 rm(SAstrainSpecificIDs_to_Uniprot_onlyJE2)
-rm(DE_WUDEA_PASNvsTSB1)
-rm(JE2_TSBvPASN_data)
+
 
 #Filter out by FDR
 Prx_significant <- filter(Prx_complete, FDR_6850 < 0.05)
 Prx_significant <- filter(Prx_significant, FDR_JE2 < 0.05)
 
-#write_xlsx(Prx_significant, path = "C:/Users/Lea Sonderegger/Documents/Prx_significant_2024.xlsx")
 #make labels using uniprot
-# Only needed once (comment out if already installed)
 BiocManager::install("UniProt.ws")
-a
 a #asks to update all/some/none => a tells it to update all
 library(RSQLite)
 library(UniProt.ws)
@@ -125,10 +128,7 @@ ggplot(Prx_significant, aes(x = diff_6850, y = diff_JE2)) +
     labs(
         x = expression("SA6850 log"[2] * " Fold Change"),
         y = expression("JE2 log"[2] * " Fold Change"),
-        caption  = "Spearman correlation: 0.727"
-    ) +
-
-    # --- colored quadrants ---
+        caption  = "Spearman correlation: 0.727") +
     geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf),
               fill = "lightgreen", alpha = 0.1) +
     geom_rect(aes(xmin = -Inf, xmax = 0, ymin = 0, ymax = Inf),
@@ -137,17 +137,10 @@ ggplot(Prx_significant, aes(x = diff_6850, y = diff_JE2)) +
               fill = "lightpink", alpha = 0.1) +
     geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf, ymax = 0),
               fill = "khaki", alpha = 0.1) +
-
-    # --- reference lines ---
     geom_vline(xintercept = 0, color = "gray50", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "gray50", linetype = "dashed") +
-
-    # ============================================================
-#             QUADRANT LABELS + SMALL ENRICHMENT
-# ============================================================
-
-# Q1 (upper right)
-annotate("text", x = 4.5, y = 3.5,
+  #Q1 (upper right)
+  annotate("text", x = 4.5, y = 3.5,
          label = "Up in both", color = "darkgreen", size = 4) +
     annotate("text", x = 4.5, y = 3.0,
              label = "STRING: none", color = "darkgreen", size = 2.5) +
@@ -163,19 +156,12 @@ annotate("text", x = 4.5, y = 3.5,
              label = "Down in both", color = "red4", size = 4) +
     annotate("text", x = -4.5, y = -5.5,
              label = "STRING: Purine metabolism & Carbon metabolism", color = "red4", size = 2.5) +
-
     # Q4 (lower right)
     annotate("text", x = 3.75, y = -5,
              label = "Up in SA6850 only", color = "orange4", size = 4) +
     annotate("text", x = 3.75, y = -5.5,
              label = "STRING: Glycolysis / Gluconeogenesis & Pyruvate metabolism", color = "orange4", size = 2.5) +
-
-    # ============================================================
-#                      Model Info beside line
-# ============================================================
-
 geom_smooth(method = "lm", se = TRUE, color = "white") +
-
     annotate(
         "text",
         x = 2,          # adjust if needed
@@ -183,31 +169,16 @@ geom_smooth(method = "lm", se = TRUE, color = "white") +
         label = "Model: diff_6850 = 0.18 + 0.90 × diff_JE2",
         color = "orange3",
         size = 3,
-        hjust = -0.1
-    ) +
-
-    # ============================================================
-#                     Points + Outlier Labels
-# ============================================================
-
+        hjust = -0.1) +
 geom_point(size = 1) +
     geom_text(
         data = subset(Prx_significant, abs(diff_6850 - diff_JE2) > 3.5),
         aes(label = Protein.names),
-        size = 1.5
-    ) +
-
-    # --- Theme ---
+        size = 1.5) +
     theme_minimal(base_size = 14) +
     theme(
         panel.grid.major = element_line(color = "gray10", linewidth = 0.4),
-        panel.grid.minor = element_line(color = "gray30", linewidth = 0.2)
-    )
-
-
-
-
-### Code can be run as a whole
+        panel.grid.minor = element_line(color = "gray30", linewidth = 0.2))
 
 
 #make a linear model
@@ -215,7 +186,6 @@ geom_point(size = 1) +
 Prx_mod <- lm(diff_6850 ~ diff_JE2, data=Prx_significant)
 #autoplot(Prx_mod)
 summary(Prx_mod)
-anova(Prx_mod)
 
 #perform correlation analysis
 cor.test(Prx_significant$diff_6850, Prx_significant$diff_JE2,
@@ -244,7 +214,7 @@ down_in_both     <- subset(Prx_significant, group == "Down in both")
 #safe to correct folder
 ### ---- Save outputs to folder ----
 
-out_dir <- "C:/Users/Lea Sonderegger/Documents/BIO253 Correlation Output/6850vJE2_2024"
+out_dir <- file.path("Correlation Analysis", "Output", "6850vJE2_2024")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset

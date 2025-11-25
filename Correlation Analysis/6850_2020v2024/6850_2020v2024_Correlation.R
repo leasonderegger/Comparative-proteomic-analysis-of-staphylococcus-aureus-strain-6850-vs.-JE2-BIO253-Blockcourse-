@@ -12,17 +12,26 @@ library(stringr)
 library(readxl)
 
 #loaddataset
-DE_WUDEA_PASNvsTSB1 <- read_excel("~/BIO253 Correlation 6850 v JE2/DE_WUDEA_PASNvsTSB1.xlsx",
-                                  sheet = "diff_exp_analysis")
-X6850_2020_data <- read_excel("~/BIO253 Correlation 6850 v JE2/6850_2020_data.xlsx",
-                              skip = 1)
-SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel("~/BIO253 Correlation 6850 v JE2/SAstrainSpecificIDs_to_Uniprot (2).xlsx",
-                                                sheet = "Sheet1", skip = 6)
+# Define the input directory (relative to project root)
+input_dir <- file.path("Correlation Analysis", "Input")
+
+# Load 6850 (2024) data – same sheet preserved
+Prx_6850_2024 <- read_excel(
+  file.path(input_dir, "6850_2024_data.xlsx"),
+  sheet = "diff_exp_analysis")
+
+# Load 6850 (2020) data – same skip preserved
+Prx_6850_2020 <- read_excel(
+  file.path(input_dir, "6850_2020_data.xlsx"),
+  skip = 1)
+
+SAstrainSpecificIDs_to_Uniprot_2_ <- read_excel(
+  file.path(input_dir, "SAstrainSpecificIDs_to_Uniprot.xlsx"),  # your repo file name
+  sheet = "Sheet1",
+  skip = 6)
 
 
-#load data
-Prx_6850_2024 <- DE_WUDEA_PASNvsTSB1
-Prx_6850_2020 <- X6850_2020_data
+
 #extract Locus as its own column
 Prx_6850_2024 <- Prx_6850_2024 %>%
     mutate(locus_tag = str_extract(description, "(?<=\\[locus_tag=)[^\\]]+"))
@@ -47,18 +56,10 @@ Prx_complete <- Prx[complete.cases(Prx[, c("ID_6850_24",
                                            "diff_6850_24",
                                            "diff_6850_2020")]), ]
 
-#safe in excel file
-#write_xlsx(Prx_complete, path = "C:/Users/Lea Sonderegger/Documents/Prx_complete_2024.xlsx")
-
-#Delete duplicate dataframes
-rm(DE_WUDEA_PASNvsTSB1)
-rm(JE2_TSBvPASN_data)
 
 #Filter out by FDR
 Prx_significant <- filter(Prx_complete, FDR_6850_24 < 0.05)
 Prx_significant <- filter(Prx_significant, FDR_6850_2020 < 0.05)
-
-#write_xlsx(Prx_significant, path = "C:/Users/Lea Sonderegger/Documents/Prx_significant_2024.xlsx")
 
 
 #Make a plot
@@ -69,7 +70,6 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
         y = expression("2020 log"[2] * " Fold Change"),
         caption = "Spearman correlation: 0.512"
     ) +
-    # --- background coloring ---
     geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf),
               fill = "lightgreen", alpha = 0.1) +  # Q1: up/up
     geom_rect(aes(xmin = -Inf, xmax = 0, ymin = 0, ymax = Inf),
@@ -78,12 +78,8 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
               fill = "lightpink", alpha = 0.1) +   # Q3: down/down
     geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf, ymax = 0),
               fill = "khaki", alpha = 0.1) +       # Q4: up in 2024 only
-
-    # --- reference lines ---
     geom_vline(xintercept = 0, color = "gray50", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "gray50", linetype = "dashed") +
-
-    # --- labels for quadrants ---
     annotate("text", x = 4.5,  y = 4.5,  label = "Up in both",
              color = "darkgreen",  size = 4) +
     annotate("text", x = -4.5, y = 4.5,  label = "Up in 2020 only",
@@ -92,8 +88,6 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
              color = "red4",       size = 4) +
     annotate("text", x = 3.75, y = -5,   label = "Up in 2024 only",
              color = "orange4",    size = 4) +
-
-    # --- STRING enrichment placeholders directly under quadrant labels ---
     annotate("text", x = 2.5,  y = 3.5,
              label = "STRING: Metabolic pathways & Glycolysis / Gluconeogenesis \n & Pyrimidine metabolism & Butanoate metabolism \n& Prophyrin and chlorophyll metabolism",
              color = "darkgreen", size = 3) +
@@ -106,7 +100,6 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
     annotate("text", x = 3.75, y = -5.6,
              label = "STRING: none",
              color = "orange4", size = 3) +
-
     theme_minimal(base_size = 14) +
     theme(
         panel.grid.major = element_line(color = "gray10", linewidth = 0.4),
@@ -121,7 +114,6 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
         size = 1
     ) +
     geom_smooth(method = "lm", se = TRUE, color = "white") +
-    # --- model info placeholder near the regression line ---
     annotate(
         "text",
         x = 3, y = 0,  # adjust to sit nicely next to your line
@@ -130,7 +122,6 @@ ggplot(Prx_significant, aes(x = diff_6850_24, y = diff_6850_2020)) +
     )
 
 
-### Code can be run as a whole
 
 
 #make a linear model
@@ -165,7 +156,7 @@ down_in_both     <- subset(Prx_significant, group == "Down in both")
 
 ### ---- Save outputs to folder (6850_2020v2024 analysis) ----
 
-out_dir <- "C:/Users/Lea Sonderegger/Documents/BIO253 Correlation Output/6850_2020v2024"
+out_dir <- file.path("Correlation Analysis", "Output", "6850_2020v2024")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset

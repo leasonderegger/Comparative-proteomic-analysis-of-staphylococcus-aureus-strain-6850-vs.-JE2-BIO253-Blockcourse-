@@ -9,18 +9,23 @@ library(ggplot2)
 library(stringr)
 
 #load data
-X6850_2020_data <- read_excel("~/BIO253 Correlation 6850 v JE2/6850_2020_data.xlsx",
-                              skip = 1)
-ABC_Transporters_in_6850 <- read_excel("~/ABC Transporters in 6850.xlsx")
-PTS_KEGG <- read_excel("~/PTS_KEGG.xlsx")
-BSS_KEGG <- read_excel("~/BSS_KEGG.xlsx")
+# Define the input directory for this script
+input_dir <- file.path("Membrane Transporters", "Input")
 
+# Load data (correct relative paths)
+Prx_6850 <- read_excel(
+  file.path(input_dir, "6850_2024_data.xlsx"),
+  skip = 1)
 
-#read in Prx Data
+ABC_Transporters_in_6850 <- read_excel(
+  file.path(input_dir, "ABC KEGG.xlsx"))
 
-Prx_6850 <- X6850_2020_data
+PTS_KEGG <- read_excel(
+  file.path(input_dir, "PTS_KEGG.xlsx"))
 
-#cat(na.omit(Prx_6850$locus_tag), sep = "\n")
+BSS_KEGG <- read_excel(
+  file.path(input_dir, "BSS_KEGG.xlsx"))
+
 
 #ABC Transporters in 6850
 #copied info from kegg webpage

@@ -211,10 +211,9 @@ up_JE2_only     <- subset(Prx_significant, group == "Up in JE2 only")
 down_in_both     <- subset(Prx_significant, group == "Down in both")
 
 
-#safe to correct folder
 ### ---- Save outputs to folder ----
 
-out_dir <- file.path("Correlation Analysis", "Output", "6850vJE2_2024")
+out_dir <- file.path("Correlation Analysis", "6850vJE2_2024")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset

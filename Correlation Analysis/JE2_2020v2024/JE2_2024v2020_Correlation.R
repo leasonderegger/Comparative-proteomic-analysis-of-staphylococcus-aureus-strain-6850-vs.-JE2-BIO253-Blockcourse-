@@ -13,15 +13,17 @@ library(readxl)
 library(stringr)
 
 #loaddataset
-JE2_2020_data <- read_excel("~/BIO253 Correlation 6850 v JE2/JE2_2020_data.xlsx",
-                            skip = 2)
-JE2_TSBvPASN_data <- read_excel("~/BIO253 Correlation 6850 v JE2/JE2_TSBvPASN_data.xlsx")
+input_dir <- file.path("Correlation Analysis", "Input")
 
+Prx_JE2_2020 <- read_excel(
+  file.path(input_dir, "JE2_2020_data.xlsx"),
+  skip = 2)
+
+Prx_JE2_2024 <- read_excel(
+  file.path(input_dir, "JE2_2024_data.xlsx"))
 
 
 #load data & extract Locus as its own column
-Prx_JE2_2024 <- JE2_TSBvPASN_data
-Prx_JE2_2020 <- JE2_2020_data
 Prx_JE2_2024 <- Prx_JE2_2024 %>%
     mutate(locus_tag = str_extract(description, "(?<=\\[locus_tag=)[^\\]]+"))
 Prx_JE2_2020 <- Prx_JE2_2020 %>%
@@ -47,18 +49,9 @@ Prx_complete <- Prx[complete.cases(Prx[, c("ID_JE2_2024",
                                            "diff_JE2_2024",
                                            "diff_JE2_2020")]), ]
 
-#safe in excel file
-#write_xlsx(Prx_complete, path = "C:/Users/Lea Sonderegger/Documents/Prx_complete_2024.xlsx")
-
-#Delete duplicate dataframes
-rm(JE2_TSBvPASN_data)
-rm(JE2_2020_data)
-
 #Filter out by FDR
 Prx_significant <- filter(Prx_complete, FDR_JE2_2024 < 0.05)
 Prx_significant <- filter(Prx_significant, FDR_JE2_2020 < 0.05)
-
-#write_xlsx(Prx_significant, path = "C:/Users/Lea Sonderegger/Documents/Prx_significant_2024.xlsx")
 
 
 #Make a plot
@@ -96,7 +89,6 @@ ggplot(Prx_complete, aes(x=diff_JE2_2024, y=diff_JE2_2020))+
         size = 1)
 
 
-### Code can be run as a whole
 
 
 #make a linear model
@@ -111,7 +103,6 @@ cor.test(Prx_significant$diff_JE2_2024, Prx_significant$diff_JE2_2020,
          exact = NULL, conf.level = 0.95, continuity = FALSE)
 
 
-#makesubsets
 #Making Subsets of each quarter
 Prx_significant <- Prx_significant %>%
     mutate(group = case_when(
@@ -129,12 +120,10 @@ up_2020_only     <- subset(Prx_significant, group == "Up in 2020 only")
 down_in_both     <- subset(Prx_significant, group == "Down in both")
 
 
-### Code can be run as a whole
 
 ##save
-### ---- Save outputs to folder (JE2_2020v2024 analysis) ----
 
-out_dir <- "C:/Users/Lea Sonderegger/Documents/BIO253 Correlation Output/JE2_2020v2024"
+out_dir <- file.path("Correlation Analysis" "JE2_2020v2024")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset

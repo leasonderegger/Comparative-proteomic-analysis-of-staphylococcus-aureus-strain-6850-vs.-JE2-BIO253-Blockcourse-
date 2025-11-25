@@ -144,7 +144,7 @@ down_in_both     <- subset(Prx_significant, group == "Down in both")
 
 ##save to folder
 
-out_dir <- file.path("Correlation Analysis", "Output", "6850vJE2_2020")
+out_dir <- file.path("Correlation Analysis", "6850vJE2_2020")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Save main significant dataset
